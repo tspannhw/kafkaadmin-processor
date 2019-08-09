@@ -2,7 +2,13 @@
 *target*
 # Compiled class file
 *.class
-
+*idea*
+*.idea/
+*/.idea/*
+/.idea/
+/target/
+*/target/
+*/target/*
 # Log file
 *.log
 
