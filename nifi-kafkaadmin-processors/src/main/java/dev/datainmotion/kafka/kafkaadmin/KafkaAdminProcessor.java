@@ -16,33 +16,22 @@
  */
 package dev.datainmotion.kafka.kafkaadmin;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.nifi.components.PropertyDescriptor;
-import org.apache.nifi.flowfile.FlowFile;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
 import org.apache.nifi.annotation.behavior.ReadsAttributes;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.behavior.WritesAttributes;
-import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
+import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.processor.*;
 import org.apache.nifi.processor.exception.ProcessException;
-import org.apache.nifi.processor.AbstractProcessor;
-import org.apache.nifi.processor.ProcessContext;
-import org.apache.nifi.processor.ProcessSession;
-import org.apache.nifi.processor.ProcessorInitializationContext;
-import org.apache.nifi.processor.Relationship;
-import org.apache.nifi.processor.io.InputStreamCallback;
-import org.apache.nifi.processor.io.StreamCallback;
 import org.apache.nifi.processor.util.StandardValidators;
-//import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Tags({"example"})
 @CapabilityDescription("Provide a description")
@@ -134,12 +123,12 @@ public class KafkaAdminProcessor extends AbstractProcessor {
             }
             final String kafkaStringURL = kafkaURL;
 
-            String kafkaTopic = flowFile.getAttribute(KAFKA_URL_NAME);
+            String kafkaTopic = flowFile.getAttribute(KAFKA_TOPIC_NAME);
             if (kafkaTopic == null) {
-                kafkaTopic = context.getProperty(KAFKA_URL_NAME).evaluateAttributeExpressions(flowFile).getValue();
+                kafkaTopic = context.getProperty(KAFKA_TOPIC_NAME).evaluateAttributeExpressions(flowFile).getValue();
             }
             if (kafkaTopic == null) {
-                kafkaTopic = "TopicForTim";
+                kafkaTopic = "nifi" + RandomStringUtils.randomAlphabetic(10);
             }
             final String kafkaTopicFinal = kafkaTopic;
 
@@ -147,49 +136,19 @@ public class KafkaAdminProcessor extends AbstractProcessor {
             attributes.put("kafka_topic", kafkaTopicFinal);
             attributes.put("kafka_url", kafkaStringURL);
 
-            // Contents of Flow file as a string
-//            final AtomicReference<String> contentsRef = new AtomicReference<>(null);
-//
-//            session.read(flowFile, new InputStreamCallback() {
-//                @Override
-//                public void process(final InputStream input) throws IOException {
-//                    final String contents = IOUtils.toString(input, "UTF-8");
-//                    contentsRef.set(contents);
-//                }
-//            });
-//
-//            String contentsOfFlowFile = null;
-//
-//            // use this as our text
-//            if (contentsRef.get() != null) {
-//                contentsOfFlowFile = contentsRef.get();
-//            }
+            Result result = kafkaAdminService.createKafkaTopic(kafkaStringURL, kafkaTopicFinal);
 
-            String kafkaTopicsList = kafkaAdminService.createKafkaTopic(kafkaStringURL, kafkaTopicFinal);
+            if (result != null) {
+                attributes.put("kafka.bootstrap", result.getBootstrap());
+                attributes.put("kafka.client.id", result.getClientId());
+                attributes.put("kafka.error.message", result.getKafkaErrorMessage());
+                attributes.put("kafka.topic.message", result.getKafkaTopicMessage());
+                flowFile = session.putAllAttributes(flowFile, attributes);
 
-            if (kafkaTopicsList == null) {
-                kafkaTopicsList = kafkaTopicFinal;
-            }
-            //List<Result> results
-            if (kafkaTopicsList != null) {
-                attributes.put("kafka_topic_list", kafkaTopicsList);
-                // getLogger().debug(String.format("Found %d results", new Object[] { results.size() }));
-
-//                        for (Result result : results) {
-//                            attributes.put(String.format("label_%d", i), result.getLabel() );
-//                            attributes.put(String.format("probability_%d",i), String.format("%.2f", result.getProbability()));
-//                            attributes.put(String.format("xmin_%d", i), String.format("%.2f", result.getXmin()));
-//                            i++;
-//                        }
-
-                System.err.println("Attributes size:" + attributes.size());
-                if (attributes.size() == 0) {
-                    session.transfer(flowFile, REL_FAILURE);
-                } else {
-                    flowFile = session.putAllAttributes(flowFile, attributes);
-
-                    session.transfer(flowFile, REL_SUCCESS);
-                }
+                session.transfer(flowFile, REL_SUCCESS);
+            } else {
+                flowFile = session.putAllAttributes(flowFile, attributes);
+                session.transfer(flowFile, REL_FAILURE);
             }
 
             session.commit();
