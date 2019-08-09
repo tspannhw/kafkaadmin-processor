@@ -1,0 +1,13 @@
+-------------------------------------------------------------------------------
+Test set: dev.datainmotion.kafka.kafkaadmin.KafkaAdminProcessorTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.408 s <<< FAILURE! - in dev.datainmotion.kafka.kafkaadmin.KafkaAdminProcessorTest
+testProcessor(dev.datainmotion.kafka.kafkaadmin.KafkaAdminProcessorTest)  Time elapsed: 0.356 s  <<< FAILURE!
+java.lang.AssertionError: org.apache.nifi.processor.exception.ProcessException: org.apache.nifi.processor.exception.ProcessException: org.apache.kafka.common.KafkaException: Failed to create new KafkaAdminClient
+	at dev.datainmotion.kafka.kafkaadmin.KafkaAdminProcessorTest.runAndAssertHappy(KafkaAdminProcessorTest.java:54)
+	at dev.datainmotion.kafka.kafkaadmin.KafkaAdminProcessorTest.testProcessor(KafkaAdminProcessorTest.java:82)
+Caused by: org.apache.nifi.processor.exception.ProcessException: org.apache.nifi.processor.exception.ProcessException: org.apache.kafka.common.KafkaException: Failed to create new KafkaAdminClient
+Caused by: org.apache.nifi.processor.exception.ProcessException: org.apache.kafka.common.KafkaException: Failed to create new KafkaAdminClient
+Caused by: org.apache.kafka.common.KafkaException: Failed to create new KafkaAdminClient
+Caused by: org.apache.kafka.common.config.ConfigException: No resolvable bootstrap urls given in bootstrap.servers
+
