@@ -32,6 +32,7 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 @Tags({"example"})
 @CapabilityDescription("Provide a description")
@@ -138,6 +139,23 @@ public class KafkaAdminProcessor extends AbstractProcessor {
 
             Result result = kafkaAdminService.createKafkaTopic(kafkaStringURL, kafkaTopicFinal);
 
+            try {
+                List<Result> results = kafkaAdminService.listKafkaTopics(kafkaStringURL);
+
+                if (results != null && results.size() > 0) {
+                    for (Result kafkaTopicEntry : results) {
+                        attributes.put("kafka.topic." +
+                                kafkaTopicEntry.getTopicName(), kafkaTopicEntry.getTopicName());
+                    }
+                }
+
+                //test method
+                kafkaAdminService.deleteKafkaTopic(kafkaStringURL, kafkaTopic);
+                //test method
+
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
             if (result != null) {
                 attributes.put("kafka.bootstrap", result.getBootstrap());
                 attributes.put("kafka.client.id", result.getClientId());

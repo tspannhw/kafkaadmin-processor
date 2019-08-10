@@ -11,6 +11,8 @@ public class Result implements Serializable {
     private String bootstrap = null;
     private String clientId = null;
     private String kafkaErrorMessage = null;
+    private String topicName = null;
+    private String brokerName = null;
 
     /**
      *
@@ -18,13 +20,17 @@ public class Result implements Serializable {
      * @param bootstrap
      * @param clientId
      * @param kafkaErrorMessage
+     * @param topicName
+     * @param brokerName
      */
-    public Result(String kafkaTopicMessage, String bootstrap, String clientId, String kafkaErrorMessage) {
+    public Result(String kafkaTopicMessage, String bootstrap, String clientId, String kafkaErrorMessage, String topicName, String brokerName) {
         super();
         this.kafkaTopicMessage = kafkaTopicMessage;
         this.bootstrap = bootstrap;
         this.clientId = clientId;
         this.kafkaErrorMessage = kafkaErrorMessage;
+        this.topicName = topicName;
+        this.brokerName = brokerName;
     }
 
     /**
@@ -45,8 +51,26 @@ public class Result implements Serializable {
         sb.append(", bootstrap='").append(bootstrap).append('\'');
         sb.append(", clientId='").append(clientId).append('\'');
         sb.append(", kafkaErrorMessage='").append(kafkaErrorMessage).append('\'');
+        sb.append(", topicName='").append(topicName).append('\'');
+        sb.append(", brokerName='").append(brokerName).append('\'');
         sb.append('}');
         return sb.toString();
+    }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
+    public String getBrokerName() {
+        return brokerName;
+    }
+
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 
     public void setKafkaTopicMessage(String kafkaTopicMessage) {
