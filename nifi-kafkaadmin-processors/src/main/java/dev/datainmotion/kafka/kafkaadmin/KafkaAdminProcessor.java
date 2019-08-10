@@ -96,14 +96,14 @@ public class KafkaAdminProcessor extends AbstractProcessor {
 
     @OnScheduled
     public void onScheduled(final ProcessContext context) {
-        System.err.println("Scheduled");
         kafkaAdminService = new KafkaAdminService();
     }
 
     @Override
     public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
-        System.err.println("onTrigger");
-
+        if (session == null || context == null) {
+            return;
+        }
         FlowFile flowFile = session.get();
         if (flowFile == null) {
             flowFile = session.create();
@@ -131,8 +131,8 @@ public class KafkaAdminProcessor extends AbstractProcessor {
             if (kafkaTopic == null) {
                 kafkaTopic = "nifi" + RandomStringUtils.randomAlphabetic(10);
             }
-            final String kafkaTopicFinal = kafkaTopic;
 
+            final String kafkaTopicFinal = kafkaTopic;
             final HashMap<String, String> attributes = new HashMap<String, String>();
             attributes.put("kafka_topic", kafkaTopicFinal);
             attributes.put("kafka_url", kafkaStringURL);
@@ -150,7 +150,7 @@ public class KafkaAdminProcessor extends AbstractProcessor {
                 }
 
                 //test method
-                kafkaAdminService.deleteKafkaTopic(kafkaStringURL, kafkaTopic);
+                //kafkaAdminService.deleteKafkaTopic(kafkaStringURL, kafkaTopic);
                 //test method
 
             } catch (Exception x) {
@@ -161,17 +161,24 @@ public class KafkaAdminProcessor extends AbstractProcessor {
                 attributes.put("kafka.client.id", result.getClientId());
                 attributes.put("kafka.error.message", result.getKafkaErrorMessage());
                 attributes.put("kafka.topic.message", result.getKafkaTopicMessage());
+                if ( result.getKafkaErrorMessage() != null && result.getKafkaErrorMessage().trim().length()>0) {
+                    attributes.put("kafka.topic.creation.success", "false");
+                }
+                else {
+                    attributes.put("kafka.topic.creation.success", "true");
+                }
                 flowFile = session.putAllAttributes(flowFile, attributes);
 
                 session.transfer(flowFile, REL_SUCCESS);
             } else {
+                attributes.put("kafka.topic.creation.success", "false");
                 flowFile = session.putAllAttributes(flowFile, attributes);
                 session.transfer(flowFile, REL_FAILURE);
             }
 
             session.commit();
         } catch (final Throwable t) {
-            getLogger().error("Unable to create Kafka Topic " + t.getLocalizedMessage());
+            getLogger().error("Unable to create Kafka Topic: " + t.getLocalizedMessage());
             throw new ProcessException(t);
         }
     }
